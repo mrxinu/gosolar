@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// Assignment ...
+// Assignment holds all the current UnDP configuration from SolarWinds.
 type Assignment struct {
 	ID             string `json:"CustomPollerAssignmentID"`
 	PollerID       string `json:"PollerID"`
