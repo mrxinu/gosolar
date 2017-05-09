@@ -13,9 +13,13 @@ working with a SolarWinds install a little easier.
 
 ## Overview
 
-GoSolar has the following SNMP functions:
+GoSolar has the following functions:
 
 * **Query** (using SWQL)
+* **GetAssignments** - get all the current UnDP assignments.
+* **AddNodePoller** - add a UnDP poller to a node.
+* **AddInterfacePoller** - add a UnDP poller to an interface.
+* **BulkSetCustomProperties** - set a custom property on a series of entities.
 
 GoSolar is under development, so I would not start using this straight
 away. Initially it's here so I can write some utilities without having
