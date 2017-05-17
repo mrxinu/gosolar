@@ -132,7 +132,21 @@ func (c *Client) BulkSetCustomProperty(uris []string, name, value string) error 
 }
 
 // SetCustomProperty sets a custom property value on a specific URI.
-func (c *Client) SetCustomProperty(uri string, properties map[string]string) error {
+func (c *Client) SetCustomProperty(uri, name, value string) error {
+	property := map[string]string{
+		name: value,
+	}
+
+	_, err := c.post(uri+"/CustomProperties", &property)
+	if err != nil {
+		return fmt.Errorf("failed to update custom property: %v", err)
+	}
+
+	return nil
+}
+
+// SetCustomProperties sets multiple properties on an entity.
+func (c *Client) SetCustomProperties(uri string, properties map[string]string) error {
 	_, err := c.post(uri+"/CustomProperties", &properties)
 	if err != nil {
 		return fmt.Errorf("failed to update custom property: %v", err)
