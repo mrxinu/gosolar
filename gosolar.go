@@ -154,3 +154,39 @@ func (c *Client) SetCustomProperties(uri string, properties map[string]string) e
 
 	return nil
 }
+
+// CreateCustomProperty creates a new custom property of a specified type.
+func (c *Client) CreateCustomProperty(cpEntity, cpType, cpName, cpDesc string) error {
+	var cpLength string
+
+	if cpType == "string" {
+		cpLength = "400"
+	} else {
+		cpLength = "0"
+	}
+
+	props := []string{
+		cpName,
+		cpDesc,
+		cpType,
+		cpLength,
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"false",
+		"",
+	}
+
+	endpoint := fmt.Sprintf("Invoke/%s/CreateCustomProperty", cpEntity)
+
+	_, err := c.post(endpoint, &props)
+	if err != nil {
+		return fmt.Errorf("failed to create custom property: %v", err)
+	}
+
+	return nil
+}

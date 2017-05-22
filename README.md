@@ -19,6 +19,7 @@ GoSolar has the following functions:
 * **GetAssignments** - get all the current UnDP assignments.
 * **AddNodePoller** - add a UnDP poller to a node.
 * **AddInterfacePoller** - add a UnDP poller to an interface.
+* **CreateCustomProperty** - create a custom property.
 * **SetCustomProperty** - set a custom property on a single entity.
 * **SetCustomProperties** - set custom properties on a single entity.
 * **BulkSetCustomProperties** - set a custom property on a series of entities.
