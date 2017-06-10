@@ -23,6 +23,7 @@ GoSolar has the following functions:
 * **SetCustomProperty** - set a custom property on a single entity.
 * **SetCustomProperties** - set custom properties on a single entity.
 * **BulkSetCustomProperties** - set a custom property on a series of entities.
+* **RemoveNCMNodes** - remove nodes from NCM monitoring.
 
 GoSolar is under development, so I would not start using this straight
 away. Initially it's here so I can write some utilities without having
