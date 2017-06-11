@@ -48,6 +48,14 @@ godoc -http=:6060 &
 $preferred_browser http://localhost:6060/pkg &
 ```
 
+## Testing
+
+```
+make test
+```
+
+The `test` make target will test the entire `gosolar` package.
+
 ## Usage
 
 TBD
