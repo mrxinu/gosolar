@@ -93,12 +93,10 @@ func (c *Client) Query(query string, parameters map[string]string) ([]byte, erro
 		return nil, fmt.Errorf("failed to query: %v", err)
 	}
 
-	type swisResult struct {
+	sr := struct {
 		Result *json.RawMessage `json:"results"`
-	}
+	}{}
 
-	// unpack the result and return it
-	var sr swisResult
 	err = json.Unmarshal(result, &sr)
 	if err != nil {
 		return nil, err
