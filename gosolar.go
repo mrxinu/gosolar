@@ -5,7 +5,8 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
+	ioutil "io/ioutil"
 	"log"
 	"net/http"
 )
@@ -57,6 +58,7 @@ func (c *Client) post(endpoint string, body interface{}) ([]byte, error) {
 		return nil, fmt.Errorf("failed to submit query: %v", err)
 	}
 	defer func() {
+		io.Copy(ioutil.Discard, res.Body)
 		err2 := res.Body.Close()
 		if err2 != nil {
 			log.Fatalf("failed to close result body: %v", err2)
