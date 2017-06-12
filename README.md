@@ -13,9 +13,13 @@ working with a SolarWinds install a little easier.
 
 ## Overview
 
-GoSolar has the following functions:
+GoSolar has the following generic methods:
 
-* **Query** (using SWQL)
+* **Query** - query information via SWQL.
+* **Delete** - delete an entity using its URI.
+
+GoSolar has the following convenience methods:
+
 * **GetAssignments** - get all the current UnDP assignments.
 * **AddNodePoller** - add a UnDP poller to a node.
 * **AddInterfacePoller** - add a UnDP poller to an interface.
