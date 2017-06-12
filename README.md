@@ -20,14 +20,19 @@ GoSolar has the following generic methods:
 
 GoSolar has the following convenience methods:
 
-* **GetAssignments** - get all the current UnDP assignments.
-* **AddNodePoller** - add a UnDP poller to a node.
-* **AddInterfacePoller** - add a UnDP poller to an interface.
-* **CreateCustomProperty** - create a custom property.
-* **SetCustomProperty** - set a custom property on a single entity.
-* **SetCustomProperties** - set custom properties on a single entity.
-* **BulkSetCustomProperties** - set a custom property on a series of entities.
-* **RemoveNCMNodes** - remove nodes from NCM monitoring.
+- Custom Properties
+  - **SetCustomProperty** - set a custom property on a single entity.
+  - **SetCustomProperties** - set custom properties on a single entity.
+  - **BulkSetCustomProperties** - set a custom property on a series of entities.
+  - **CreateCustomProperty** - create a custom property.
+- Network Configuration Manager (NCM)
+  - **RemoveNCMNodes** - remove nodes from NCM monitoring.
+- Inventory Management
+  - **BulkDelete** - delete multiple URIs in one request.
+- Universal Device Poller (UnDP)
+  - **GetAssignments** - get all the current UnDP assignments.
+  - **AddNodePoller** - add a UnDP poller to a node.
+  - **AddInterfacePoller** - add a UnDP poller to an interface. 
 
 GoSolar is under development, so I would not start using this straight
 away. Initially it's here so I can write some utilities without having

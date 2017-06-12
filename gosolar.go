@@ -110,3 +110,43 @@ func (c *Client) Invoke(entity, verb string, body interface{}) ([]byte, error) {
 
 	return c.post(endpoint, body)
 }
+
+func (c *Client) BulkDelete(uris []string) ([]byte, error) {
+	req := map[string][]string{
+		"uris": uris,
+	}
+
+	return c.post("BulkDelete", req)
+}
+
+func (c *Client) Delete(uri string) ([]byte, error) {
+	req, err := http.NewRequest("DELETE", c.URL+uri, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create a new request: %v", err)
+	}
+
+	req.SetBasicAuth(c.Username, c.Password)
+	res, err := c.http.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to delete: %v", err)
+	}
+	defer func() {
+		io.Copy(ioutil.Discard, res.Body)
+		err2 := res.Body.Close()
+		if err2 != nil {
+			log.Fatalf("failed to close result body: %v", err2)
+		}
+	}()
+
+	output, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, fmt.Errorf("delete failed - status code %d: %v", res.StatusCode, err)
+	}
+
+	if res.StatusCode >= 400 {
+		return nil, fmt.Errorf("swis failure message [status: %d]:\n%s",
+			res.StatusCode, string(output))
+	}
+
+	return output, nil
+}
