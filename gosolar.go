@@ -79,10 +79,10 @@ func (c *Client) post(endpoint string, body interface{}) ([]byte, error) {
 }
 
 // Query retrieves a result from the SolarWinds API.
-func (c *Client) Query(query string, parameters map[string]string) ([]byte, error) {
+func (c *Client) Query(query string, parameters interface{}) ([]byte, error) {
 	req := struct {
-		Query      string            `json:"query"`
-		Parameters map[string]string `json:"parameters"`
+		Query      string      `json:"query"`
+		Parameters interface{} `json:"parameters"`
 	}{
 		Query:      query,
 		Parameters: parameters,
