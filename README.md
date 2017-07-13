@@ -16,6 +16,7 @@ working with a SolarWinds install a little easier.
 GoSolar has the following generic methods:
 
 * **Query** - query information via SWQL.
+* **Create** - create new entities (nodes, pollers, etc.).
 * **Delete** - delete an entity using its URI.
 
 GoSolar has the following convenience methods:

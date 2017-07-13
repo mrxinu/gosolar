@@ -105,6 +105,12 @@ func (c *Client) Query(query string, parameters interface{}) ([]byte, error) {
 	return []byte(*sr.Result), nil
 }
 
+func (c *Client) Create(entity, body interface{}) ([]byte, error) {
+	endpoint := fmt.Sprintf("Create/%s", entity)
+
+	return c.post(endpoint, body)
+}
+
 func (c *Client) Invoke(entity, verb string, body interface{}) ([]byte, error) {
 	endpoint := fmt.Sprintf("Invoke/%s/%s", entity, verb)
 
