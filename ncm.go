@@ -15,11 +15,11 @@ func (c *Client) RemoveNCMNodes(guids []string) error {
 }
 
 // RemoveNodeEndpoint is the endpoint to send the post request to remove NCM Nodes
-const RemoveNodeEndpoint_v1 = "Invoke/Cirrus.Nodes/RemoveNodes"
+const RemoveNodeEndpoint = "Invoke/Cirrus.Nodes/RemoveNodes"
 
 // getRemoveNCMNodesRequest is a function that will convert a slice of guid strings into
 // an endpoint and a request that the API expects.
 func getRemoveNCMNodesRequest(guids []string) ([][]string, string) {
 	req := [][]string{guids}
-	return req, RemoveNodeEndpoint_v1
+	return req, RemoveNodeEndpoint
 }
