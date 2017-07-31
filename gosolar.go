@@ -57,18 +57,12 @@ func (c *Client) post(endpoint string, body interface{}) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to submit query: %v", err)
 	}
-	defer func() {
-		io.Copy(ioutil.Discard, res.Body)
-		err2 := res.Body.Close()
-		if err2 != nil {
-			log.Fatalf("failed to close result body: %v", err2)
-		}
-	}()
 
 	output, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return nil, fmt.Errorf("query failed - status code %d: %v", res.StatusCode, err)
 	}
+	res.Body.Close()
 
 	if res.StatusCode >= 400 {
 		return nil, fmt.Errorf("swis failure message [status: %d]:\n%s",
@@ -173,18 +167,12 @@ func (c *Client) Delete(uri string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to delete: %v", err)
 	}
-	defer func() {
-		io.Copy(ioutil.Discard, res.Body)
-		err2 := res.Body.Close()
-		if err2 != nil {
-			log.Fatalf("failed to close result body: %v", err2)
-		}
-	}()
 
 	output, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return nil, fmt.Errorf("delete failed - status code %d: %v", res.StatusCode, err)
 	}
+	res.Body.Close()
 
 	if res.StatusCode >= 400 {
 		return nil, fmt.Errorf("swis failure message [status: %d]:\n%s",
