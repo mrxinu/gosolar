@@ -24,7 +24,7 @@ func (c *Client) GetAssignments() ([]Assignment, error) {
 			,CustomPollerID
 			,NodeID
 			,InterfaceID
-			,CustomcustomPollerID
+			,CustomPollerID
 			,InstanceType
 		FROM Orion.NPM.CustomPollerAssignment
 	`
