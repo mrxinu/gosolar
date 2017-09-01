@@ -45,7 +45,7 @@ to rework the client code every time I do.
 Install via **go get**:
 
 ```shell
-go get github.com/mrxinu/gosolar
+go get -u github.com/mrxinu/gosolar
 ```
 
 ## Documentation
