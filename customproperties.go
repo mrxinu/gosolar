@@ -3,7 +3,7 @@ package gosolar
 import "fmt"
 
 // BulkSetCustomProperty sets a custom property on a series of URIs.
-func (c *Client) BulkSetCustomProperty(uris []string, name, value string) error {
+func (c *Client) BulkSetCustomProperty(uris []string, name string, value interface{}) error {
 	// load up the uris that are going to be affected
 	var cpuris []string
 	for _, uri := range uris {
@@ -11,11 +11,11 @@ func (c *Client) BulkSetCustomProperty(uris []string, name, value string) error 
 	}
 
 	bulkRequest := struct {
-		URIs       []string          `json:"uris"`
-		Properties map[string]string `json:"properties"`
+		URIs       []string               `json:"uris"`
+		Properties map[string]interface{} `json:"properties"`
 	}{
 		URIs: cpuris,
-		Properties: map[string]string{
+		Properties: map[string]interface{}{
 			name: value,
 		},
 	}
@@ -29,8 +29,8 @@ func (c *Client) BulkSetCustomProperty(uris []string, name, value string) error 
 }
 
 // SetCustomProperty sets a custom property value on a specific URI.
-func (c *Client) SetCustomProperty(uri, name, value string) error {
-	property := map[string]string{
+func (c *Client) SetCustomProperty(uri, name string, value interface{}) error {
+	property := map[string]interface{}{
 		name: value,
 	}
 
