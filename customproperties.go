@@ -43,7 +43,7 @@ func (c *Client) SetCustomProperty(uri, name string, value interface{}) error {
 }
 
 // SetCustomProperties sets multiple properties on an entity.
-func (c *Client) SetCustomProperties(uri string, properties map[string]string) error {
+func (c *Client) SetCustomProperties(uri string, properties map[string]interface{}) error {
 	_, err := c.post(uri+"/CustomProperties", &properties)
 	if err != nil {
 		return fmt.Errorf("failed to update custom property: %v", err)
