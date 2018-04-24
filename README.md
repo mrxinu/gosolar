@@ -35,11 +35,7 @@ GoSolar has the following convenience methods:
 * Universal Device Poller (UnDP)
   * **GetAssignments** - get all the current UnDP assignments.
   * **AddNodePoller** - add a UnDP poller to a node.
-  * **AddInterfacePoller** - add a UnDP poller to an interface. 
-
-GoSolar is under development, so I would not start using this straight
-away. Initially it's here so I can write some utilities without having
-to rework the client code every time I do.
+  * **AddInterfacePoller** - add a UnDP poller to an interface.
 
 ## Installation
 
@@ -59,14 +55,6 @@ cd $GOPATH
 godoc -http=:6060 &
 $preferred_browser http://localhost:6060/pkg &
 ```
-
-## Testing
-
-```
-make test
-```
-
-The `test` make target will test the entire `gosolar` package.
 
 ## Usage
 
