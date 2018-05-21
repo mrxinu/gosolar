@@ -233,3 +233,7 @@ func (c *Client) Delete(uri string) ([]byte, error) {
 
 	return output, nil
 }
+
+func (c *Client) Update(uri string, body map[string]interface{}) ([]byte, error) {
+	return c.post(uri, body)
+}
