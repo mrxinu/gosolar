@@ -132,6 +132,58 @@ func (c *Client) Query(query string, parameters interface{}) ([]byte, error) {
 	return []byte(*sr.Result), nil
 }
 
+func (c *Client) QueryOne(query string, parameters interface{}) (interface{}, error) {
+	res, err := c.QueryRow(query, parameters)
+	if err != nil {
+		return nil, err
+	}
+
+	m := make(map[string]interface{})
+
+	if json.Unmarshal(res, &m); err != nil {
+		return nil, fmt.Errorf("could not unmarshal the result: %v", err)
+	}
+
+	var value interface{}
+	for _, v := range m {
+		value = v
+		break
+	}
+
+	return value, nil
+}
+
+func (c *Client) QueryRow(query string, parameters interface{}) ([]byte, error) {
+	res, err := c.Query(query, parameters)
+	if err != nil {
+		return nil, err
+	}
+
+	return res[1 : len(res)-1], nil
+}
+
+func (c *Client) QueryColumn(query string, parameters interface{}) ([]interface{}, error) {
+	res, err := c.Query(query, parameters)
+	if err != nil {
+		return nil, err
+	}
+
+	var rows []map[string]interface{}
+
+	if json.Unmarshal(res, &rows); err != nil {
+		return nil, fmt.Errorf("could not unmarshal the result: %v", err)
+	}
+
+	var values []interface{}
+	for _, m := range rows {
+		for _, v := range m {
+			values = append(values, v)
+		}
+	}
+
+	return values, nil
+}
+
 func (c *Client) Create(entity, body interface{}) ([]byte, error) {
 	endpoint := fmt.Sprintf("Create/%s", entity)
 
