@@ -2,7 +2,7 @@ package gosolar
 
 import "fmt"
 
-// RemoveNCM Nodes deletes nodes from NCM handling in SolarWinds.
+// RemoveNCMNodes deletes nodes from NCM handling in SolarWinds.
 func (c *Client) RemoveNCMNodes(guids []string) error {
 	endpoint := "Invoke/Cirrus.Nodes/RemoveNodes"
 	req := [][]string{guids}

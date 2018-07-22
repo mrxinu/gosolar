@@ -132,6 +132,7 @@ func (c *Client) Query(query string, parameters interface{}) ([]byte, error) {
 	return []byte(*sr.Result), nil
 }
 
+// QueryOne wraps QueryRow which wraps post and extracts a single value.
 func (c *Client) QueryOne(query string, parameters interface{}) (interface{}, error) {
 	res, err := c.QueryRow(query, parameters)
 	if err != nil {
@@ -153,6 +154,7 @@ func (c *Client) QueryOne(query string, parameters interface{}) (interface{}, er
 	return value, nil
 }
 
+// QueryRow wraps query and pulls a single row from the result.
 func (c *Client) QueryRow(query string, parameters interface{}) ([]byte, error) {
 	res, err := c.Query(query, parameters)
 	if err != nil {
@@ -162,6 +164,7 @@ func (c *Client) QueryRow(query string, parameters interface{}) ([]byte, error) 
 	return res[1 : len(res)-1], nil
 }
 
+// QueryColumn wraps Query and pulls a single column of values into a slice of maps.
 func (c *Client) QueryColumn(query string, parameters interface{}) ([]interface{}, error) {
 	res, err := c.Query(query, parameters)
 	if err != nil {
@@ -184,6 +187,7 @@ func (c *Client) QueryColumn(query string, parameters interface{}) ([]interface{
 	return values, nil
 }
 
+// Create calls the create endpoint and passes the entity and body.
 func (c *Client) Create(entity, body interface{}) ([]byte, error) {
 	endpoint := fmt.Sprintf("Create/%s", entity)
 
@@ -194,12 +198,14 @@ func (c *Client) Read(uri string) ([]byte, error) {
 	return c.get(uri)
 }
 
+// Invoke calls the invoke endpoint with the entity and verb along with a body.
 func (c *Client) Invoke(entity, verb string, body interface{}) ([]byte, error) {
 	endpoint := fmt.Sprintf("Invoke/%s/%s", entity, verb)
 
 	return c.post(endpoint, body)
 }
 
+// BulkDelete wraps post and send a slice of URIs to delete.
 func (c *Client) BulkDelete(uris []string) ([]byte, error) {
 	req := map[string][]string{
 		"uris": uris,
@@ -208,6 +214,7 @@ func (c *Client) BulkDelete(uris []string) ([]byte, error) {
 	return c.post("BulkDelete", req)
 }
 
+// Delete wraps post and uses the DELETE method to delete an entity.
 func (c *Client) Delete(uri string) ([]byte, error) {
 	req, err := http.NewRequest("DELETE", c.URL+uri, nil)
 	if err != nil {
@@ -234,6 +241,7 @@ func (c *Client) Delete(uri string) ([]byte, error) {
 	return output, nil
 }
 
+// Update wraps the post function passing the URI and body to update.
 func (c *Client) Update(uri string, body map[string]interface{}) ([]byte, error) {
 	return c.post(uri, body)
 }
