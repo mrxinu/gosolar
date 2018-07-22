@@ -21,6 +21,12 @@ GoSolar has the following generic methods:
 * **Delete** - delete an entity using its URI.
 * **Invoke** - run verbs found in the SolarWinds API.
 
+GoSolar has the following query wrappers for ease of use:
+
+* **QueryOne** - returns a single `interface{}` from the query.
+* **QueryRow** - returns a `[]byte` representing the single row.
+* **QueryColumn** - returns a `[]interface{}` from the query.
+
 GoSolar has the following convenience methods:
 
 * Custom Properties
