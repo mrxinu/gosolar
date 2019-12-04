@@ -58,3 +58,35 @@ func (c *Client) GetSubnet(subnetName string) Subnet {
 	}
 	return subnet
 }
+
+// ListSubnets Lists subnets.
+func (c *Client) ListSubnets() []Subnet {
+	query := `SELECT	Address, 
+						CIDR, 
+						AddressMask, 
+						DisplayName, 
+						FriendlyName, 
+						Reserved, 
+						TotalCount, 
+						UsedCount, 
+						AvailableCount, 
+						ReservedCount, 
+						TransientCount, 
+							StatusName 
+					FROM IPAM.Subnets`
+
+	res, err := c.Query(query, nil)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var subnet []Subnet
+	bodyString := string(res)
+	log.Debugf("ResponseString %s", bodyString)
+
+	if err := json.Unmarshal(res, &subnet); err != nil {
+		log.Fatal(err)
+	}
+	return subnet
+}

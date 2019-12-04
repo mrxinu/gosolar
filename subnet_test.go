@@ -26,8 +26,6 @@ func (suite *TestSuite) SetupTest() {
 
 func (suite *TestSuite) TestFetchSubnet() {
 
-	// assert equality
-	//assert.Equal(t, 123, 123, "they should be equal")
 	subnet := suite.client.GetSubnet("Subnet1")
 	nullSubnetList := []Subnet{}
 	assert.Equal(suite.T(), nullSubnetList, subnet)
@@ -35,8 +33,6 @@ func (suite *TestSuite) TestFetchSubnet() {
 
 func (suite *TestSuite) TestFetchNamedSubnet() {
 
-	// assert equality
-	//assert.Equal(t, 123, 123, "they should be equal")
 	subnet := suite.client.GetSubnet("test")
 	expectedSubnet := Subnet{
 		SubnetID:       1234,
@@ -54,6 +50,43 @@ func (suite *TestSuite) TestFetchNamedSubnet() {
 	}
 	assert.Equal(suite.T(), expectedSubnet, subnet)
 }
+
+/*
+func (suite *TestSuite) TestListSubnets() {
+
+	subnet := suite.client.ListSubnets()
+	expectedSubnets := []Subnet{
+		{
+			SubnetID:       1234,
+			Address:        "10.199.152.0",
+			CIDR:           "23",
+			FriendlyName:   "test subnet",
+			DisplayName:    "test subnet",
+			AvailableCount: 200,
+			ReservedCount:  2,
+			UsedCount:      181,
+			TotalCount:     512,
+			Comments:       "NFS - VLAN 410",
+			VLAN:           410,
+			AddressMask:    "255.255.254.0",
+		},
+		{
+			SubnetID:       1234,
+			Address:        "10.199.152.0",
+			CIDR:           "23",
+			FriendlyName:   "test subnet 2",
+			DisplayName:    "test subnet 2",
+			AvailableCount: 200,
+			ReservedCount:  2,
+			UsedCount:      181,
+			TotalCount:     512,
+			Comments:       "Subnet2",
+			VLAN:           410,
+			AddressMask:    "255.255.254.0",
+		},
+	}
+	assert.Equal(suite.T(), expectedSubnets, subnet)
+}*/
 
 // In order for 'go test' to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run
