@@ -2,24 +2,28 @@ package gosolar
 
 import (
 	"encoding/json"
-	"log"
+
+	log "github.com/sirupsen/logrus"
 )
 
+// Subnet this is the json representation of subnet
 type Subnet struct {
+	SubnetID       int    `json:"SubnetId"`
 	Address        string `json:"Address"`
 	CIDR           string `json:"CIDR"`
-	Comments       string `json:"Comments"`
-	AddressMask    string `json:"AddressMask"`
-	DisplayName    string `json:"DisplayName"`
 	FriendlyName   string `json:"FriendlyName"`
-	TotalCount     int    `json:"totalCount"`
-	UsedCount      int    `json:"UsedCount"`
+	DisplayName    string `json:"DisplayName"`
 	AvailableCount int    `json:"AvailableCount"`
 	ReservedCount  int    `json:"ReservedCount"`
-	//TransientCount string `json"Transient"`
+	UsedCount      int    `json:"UsedCount"`
+	TotalCount     int    `json:"totalCount"`
+	Comments       string `json:"Comments"`
+	VLAN           int    `json:"VLAN"`
+	AddressMask    string `json:"AddressMask"`
 }
 
-func (c *Client) GetSubnet(subnetName string) []Subnet {
+// GetSubnet Gets a subnet by display name.
+func (c *Client) GetSubnet(subnetName string) Subnet {
 	query := `SELECT	Address, 
 						CIDR, 
 						AddressMask, 
@@ -45,15 +49,12 @@ func (c *Client) GetSubnet(subnetName string) []Subnet {
 		log.Fatal(err)
 	}
 
-	var subnets []Subnet
+	var subnet Subnet
+	bodyString := string(res)
+	log.Debugf("ResponseString %s", bodyString)
 
-	if err := json.Unmarshal(res, &subnets); err != nil {
+	if err := json.Unmarshal(res, &subnet); err != nil {
 		log.Fatal(err)
 	}
-
-	if len(subnets) < 1 {
-		log.Print("[INFO] No subnets matching that name found.")
-	}
-
-	return subnets
+	return subnet
 }
