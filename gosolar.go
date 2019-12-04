@@ -25,7 +25,7 @@ type Client struct {
 // NewClient creates a new reference to the Client struct.
 func NewClient(host, user, pass string, ignoreSSL bool) *Client {
 	return &Client{
-		URL:      fmt.Sprintf("https://%s:17778/SolarWinds/InformationService/v3/Json/", host),
+		URL:      fmt.Sprintf("http://%s:17778/SolarWinds/InformationService/v3/Json/", host),
 		Username: user,
 		Password: pass,
 		http: &http.Client{
