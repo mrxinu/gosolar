@@ -19,9 +19,11 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/stobias123/gosolar"
+	log "github.com/sirupsen/logrus"
 )
 
-var vlan string
+var vlanName string
 
 // subnetCmd represents the subnet command
 var subnetCmd = &cobra.Command{
@@ -49,11 +51,20 @@ var findSubnet = &cobra.Command{
 	Short: "Find a subnet by name",
 	Long:  `Find subnet by name.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		name, _ := cmd.Flags().GetString("name")
-
+		var subnet gosolar.Subnet
+		
 		client := GetClient(cmd, args)
-		if 
-		resultSubnet, _ := json.Marshal(client.GetSubnet(name))
+		subnetName, _ := cmd.Flags().GetString("name")
+		
+		if len(subnetName) > 1 {
+			subnet = client.GetSubnet(subnetName)
+		} else if len(vlanName) > 1 {
+			subnet = client.GetSubnetByVLAN(vlanName)
+		} else {
+			log.Errorf("Provide either subnet_name or vlan")
+		}
+
+		resultSubnet, _ := json.Marshal(subnet)
 		fmt.Println(string(resultSubnet))
 	},
 }
@@ -62,16 +73,8 @@ func init() {
 	rootCmd.AddCommand(subnetCmd)
 	subnetCmd.AddCommand(findSubnet)
 	subnetCmd.AddCommand(listSubnets)
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// subnetCmd.PersistentFlags().String("foo", "", "A help for foo")
+	
 	findSubnet.Flags().StringP("name", "n", "", "Subnet name")
+	findSubnet.Flags().StringVarP(&vlanName, "vlan", "", "", "Subnet vlan")
 
-	findSubnet.Flags().StringVarP(&vlan, "vlan", "", "", "Subnet vlan")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// subnetCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
