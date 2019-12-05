@@ -127,7 +127,7 @@ func (c *Client) CommentOnIPNode(ipAddress string, comment string) IPAddress {
 		"Comments": comment,
 	}
 	log.Info(ipAddr)
-	uri := fmt.Sprintf("swis://%s/Orion/IPAM.IPNode/IPNodeID=%d", c.Server, ipAddr.IPNodeID)
+	uri := fmt.Sprintf("swis://localhost/Orion/IPAM.IPNode/IpNodeId=%d", ipAddr.IPNodeID)
 	log.Info(uri)
 	result, err := c.Update(uri, body)
 	resultString := string(result)

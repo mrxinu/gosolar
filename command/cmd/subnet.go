@@ -21,6 +21,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var vlan string
+
 // subnetCmd represents the subnet command
 var subnetCmd = &cobra.Command{
 	Use:   "subnet",
@@ -50,6 +52,7 @@ var findSubnet = &cobra.Command{
 		name, _ := cmd.Flags().GetString("name")
 
 		client := GetClient(cmd, args)
+		if 
 		resultSubnet, _ := json.Marshal(client.GetSubnet(name))
 		fmt.Println(string(resultSubnet))
 	},
@@ -65,6 +68,8 @@ func init() {
 	// and all subcommands, e.g.:
 	// subnetCmd.PersistentFlags().String("foo", "", "A help for foo")
 	findSubnet.Flags().StringP("name", "n", "", "Subnet name")
+
+	findSubnet.Flags().StringVarP(&vlan, "vlan", "", "", "Subnet vlan")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:

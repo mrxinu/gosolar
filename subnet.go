@@ -33,13 +33,56 @@ func (c *Client) GetSubnet(subnetName string) Subnet {
 						UsedCount, 
 						AvailableCount, 
 						ReservedCount, 
-						TransientCount, 
+						TransientCount,
+						VLAN,
 							StatusName 
 					FROM IPAM.Subnet
 					WHERE DisplayName = @name`
 
 	parameters := map[string]interface{}{
 		"name": subnetName,
+	}
+
+	res, err := c.Query(query, parameters)
+
+	var subnet []Subnet
+	bodyString := string(res)
+
+	if err != nil {
+		log.Infof("ResponseString %s", bodyString)
+		log.Fatal(err)
+	}
+
+	if err := json.Unmarshal(res, &subnet); err != nil {
+		log.Infof("ResponseString %s", bodyString)
+		log.Fatal(err)
+	}
+	if len(subnet) < 1 {
+		return Subnet{}
+	}
+
+	return subnet[0]
+}
+
+// GetSubnetByVLAN Gets a subnet using the VLAN as a parameter
+func (c *Client) GetSubnetByVLAN(vlan string) Subnet {
+	query := `SELECT TOP 1 Address, 
+						CIDR, 
+						AddressMask, 
+						DisplayName, 
+						FriendlyName, 
+						TotalCount, 
+						UsedCount, 
+						AvailableCount, 
+						ReservedCount, 
+						TransientCount,
+						VLAN,
+						StatusName 
+					FROM IPAM.Subnet
+					WHERE VLAN = @vlan`
+
+	parameters := map[string]interface{}{
+		"vlan": vlan,
 	}
 
 	res, err := c.Query(query, parameters)
