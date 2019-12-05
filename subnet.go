@@ -18,7 +18,7 @@ type Subnet struct {
 	UsedCount      int    `json:"UsedCount"`
 	TotalCount     int    `json:"totalCount"`
 	Comments       string `json:"Comments"`
-	VLAN           int    `json:"VLAN"`
+	VLAN           string `json:"VLAN"`
 	AddressMask    string `json:"AddressMask"`
 }
 
@@ -35,10 +35,10 @@ func (c *Client) GetSubnet(subnetName string) Subnet {
 						ReservedCount, 
 						TransientCount,
 						VLAN,
-							StatusName 
+						StatusName 
 					FROM IPAM.Subnet
 					WHERE DisplayName = @name`
-
+	
 	parameters := map[string]interface{}{
 		"name": subnetName,
 	}
