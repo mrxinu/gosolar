@@ -20,6 +20,7 @@ type IPAddress struct {
 var statuses = []string{"Used", "Available", "Reserved", "Transient", "Blocked"}
 
 // GetFirstAvailableIP returns the first available ip in the subnet
+// TODO: change to return error, so terraform can handle not found IPs
 func (c *Client) GetFirstAvailableIP(subnetAddress string, subnetCIDR string) IPAddress {
 
 	// We need to format the body as an array...
@@ -32,6 +33,7 @@ func (c *Client) GetFirstAvailableIP(subnetAddress string, subnetCIDR string) IP
 	// We have to do some fancy slicing to get rid of quotes. Fuck this api.
 	bodyString := string(res)[1 : len(string(res))-1]
 
+	// IP Not found. Or there's a problem
 	if err != nil {
 		log.Infof("ResponseString %s", bodyString)
 		log.Fatal(err)
@@ -47,6 +49,7 @@ func (c *Client) GetFirstAvailableIP(subnetAddress string, subnetCIDR string) IP
 }
 
 // GetIP returns a full ip address object for ips
+// TODO: change to return error, so terraform can handle not found IPs
 func (c *Client) GetIP(ipAddress string) IPAddress {
 	query := `SELECT TOP 1 
 				IpNodeId, 
@@ -87,6 +90,7 @@ func (c *Client) GetIP(ipAddress string) IPAddress {
 //Update: Set-SwisObject $swis -Uri 'swis://localhost/Orion/IPAM.IPNode/IpNodeId=2' -Properties @{ Status = 'Used', Comment = "Reserved by terraform." }
 
 // ReserveIP will set the IP Status to "Used"
+// TODO: change to return error, so terraform can handle not found IPs
 func (c *Client) ReserveIP(ipAddress string) IPAddress {
 	// We need to format the body as an array...
 	body := []string{
