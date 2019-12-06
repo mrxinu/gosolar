@@ -10,7 +10,7 @@ import (
 type Subnet struct {
 	SubnetID       int    `json:"SubnetId"`
 	Address        string `json:"Address"`
-	CIDR           string    `json:"CIDR"`
+	CIDR           int    `json:"CIDR"`
 	FriendlyName   string `json:"FriendlyName"`
 	DisplayName    string `json:"DisplayName"`
 	AvailableCount int    `json:"AvailableCount"`

@@ -63,7 +63,7 @@ func (c *Client) GetIP(ipAddress string) IPAddress {
 	res, err := c.Query(query, parameters)
 	// run the query without with the parameters map above
 	bodyString := string(res)
-
+	
 	if err != nil {
 		log.Infof("ResponseString %s", bodyString)
 		log.Fatal(err)
@@ -80,7 +80,7 @@ func (c *Client) GetIP(ipAddress string) IPAddress {
 	if len(ip) < 1 {
 		return IPAddress{}
 	}
-	ip[0].StatusString = statuses[ip[0].Status-1]
+	//ip[0].StatusString = statuses[ip[0].Status-1]
 	return ip[0]
 }
 
