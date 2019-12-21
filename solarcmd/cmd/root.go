@@ -30,11 +30,7 @@ var cfgFile string
 var rootCmd = &cobra.Command{
 	Use:   "solarcmd",
 	Short: "solarcmd is a CLI to interact with Solarwinds Orion API",
-	Long: `solarcmd is a CLI application that provides several common orion functions.
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Long: `solarcmd is a CLI application that provides several common orion functions.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	//	Run: func(cmd *cobra.Command, args []string) { },
