@@ -49,8 +49,18 @@ func Execute() {
 	}
 }
 
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "version is a CLI to interact with Solarwinds Orion API",
+	// Uncomment the following line if your bare application
+	// has an action associated with it:
+	Run: func(cmd *cobra.Command, args []string) { fmt.Println("1.0")},
+}
+
 func init() {
 	cobra.OnInitialize(initConfig)
+	
+	rootCmd.AddCommand(versionCmd)
 
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,

@@ -1,6 +1,6 @@
 # gosolar
 
-[![GoDoc](https://godoc.org/github.com/mrxinu/gosolar?status.png)](http://godoc.org/github.com/mrxinu/gosolar) [![Go Report Card](https://goreportcard.com/badge/github.com/mrxinu/gosolar)](https://goreportcard.com/report/github.com/mrxinu/gosolar)
+[![GoDoc](https://godoc.org/github.com/stobias123/gosolar?status.png)](http://godoc.org/github.com/stobias123/gosolar) [![Go Report Card](https://goreportcard.com/badge/github.com/stobias123/gosolar)](https://goreportcard.com/report/github.com/stobias123/gosolar)
 
 GoSolar is a SolarWinds client library written in Go. It allows you
 to submit queries to the SolarWinds Information Service (SWIS) and
@@ -8,7 +8,7 @@ do various other things.
 
 ## About
 
-**mrxinu/gosolar** is a wrapper around REST calls to the SWIS and makes
+**stobias123/gosolar** is a wrapper around REST calls to the SWIS and makes
 working with a SolarWinds install a little easier.
 
 ## Overview
@@ -48,12 +48,12 @@ GoSolar has the following convenience methods:
 Install via **go get**:
 
 ```shell
-go get -u github.com/mrxinu/gosolar
+go get -u github.com/stobias123/gosolar
 ```
 
 ## Documentation
 
-See [http://godoc.org/github.com/mrxinu/gosolar](http://godoc.org/github.com/mrxinu/gosolar) or your local go doc
+See [http://godoc.org/github.com/stobias123/gosolar](http://godoc.org/github.com/stobias123/gosolar) or your local go doc
 server for full documentation, as well as the examples.
 
 ```shell
@@ -74,7 +74,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/mrxinu/gosolar"
+	"github.com/stobias123/gosolar"
 )
 
 func main() {
@@ -112,5 +112,5 @@ func main() {
 
 ## Bugs
 
-Please create an [issue](https://github.com/mrxinu/gosolar/issues) on
+Please create an [issue](https://github.com/stobias123/gosolar/issues) on
 GitHub with details about the bug and steps to reproduce it.
