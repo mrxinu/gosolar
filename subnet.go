@@ -66,7 +66,7 @@ func (c *Client) GetSubnet(subnetName string) Subnet {
 
 
 // GetSubnetByAddress Gets a subnet using the Address as a parameter
-func (c *Client) GetSubnetByAddress(vlan string) Subnet {
+func (c *Client) GetSubnetByAddress(address string) Subnet {
 	query := `SELECT TOP 1 Address, 
 						CIDR, 
 						AddressMask, 
@@ -83,7 +83,7 @@ func (c *Client) GetSubnetByAddress(vlan string) Subnet {
 					WHERE Address = @address`
 
 	parameters := map[string]interface{}{
-		"address": Address,
+		"address": address,
 	}
 
 	res, err := c.Query(query, parameters)

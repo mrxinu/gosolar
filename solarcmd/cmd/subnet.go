@@ -24,7 +24,7 @@ import (
 )
 
 var vlanName string
-var address string
+var subnetAddress string
 
 // subnetCmd represents the subnet command
 var subnetCmd = &cobra.Command{
@@ -59,8 +59,8 @@ var findSubnet = &cobra.Command{
 		
 		if len(subnetName) > 1 {
 			subnet = client.GetSubnet(subnetName)
-		} else if len(address) > 1 {
-			subnet = client.GetSubnetByAddress(address)
+		} else if len(subnetAddress) > 1 {
+			subnet = client.GetSubnetByAddress(subnetAddress)
 		} else if len(vlanName) > 1 {
 			subnet = client.GetSubnetByVLAN(vlanName)
 		} else {
@@ -75,10 +75,10 @@ var findSubnet = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(subnetCmd)
 	subnetCmd.AddCommand(findSubnet)
-	subnetCmd.AddCommand(listSubnets))
+	subnetCmd.AddCommand(listSubnets)
 	
 	findSubnet.Flags().StringP("name", "n", "", "Subnet name")
 	findSubnet.Flags().StringVarP(&vlanName, "vlan", "", "", "Subnet vlan")
-	findSubnet.Flags().StringVarP(&address, "address", "", "", "Subnet address")
+	findSubnet.Flags().StringVarP(&subnetAddress, "address", "", "", "Subnet address")
 
 }
