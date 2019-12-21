@@ -1,4 +1,4 @@
-module github.com/stobias123/gosolar/command
+module github.com/stobias123/gosolar/solarcmd
 
 go 1.13
 

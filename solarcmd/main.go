@@ -14,7 +14,7 @@
 
 package main
 
-import "github.com/stobias123/gosolar/command/cmd"
+import "github.com/stobias123/gosolar/solarcmd/cmd"
 
 func main() {
 	cmd.Execute()
