@@ -1,6 +1,6 @@
 # gosolar
 
-[![GoDoc](https://godoc.org/github.com/mrxinu/gosolar?status.png)](http://godoc.org/github.com/mrxinu/gosolar) [![Go Report Card](https://goreportcard.com/badge/github.com/mrxinu/gosolar)](https://goreportcard.com/report/github.com/mrxinu/gosolar)
+[![GoDoc](https://godoc.org/github.com/mrxinu/gosolar?status.png)](http://godoc.org/github.com/mrxinu/gosolar) [![Go Report Card](https://goreportcard.com/badge/github.com/mrxinu/gosolar)](https://goreportcard.com/report/github.com/mrxinu/gosolar) [![Build Status](https://travis-ci.com/mrxinu/gosolar.svg?branch=master)](https://travis-ci.com/mrxinu/gosolar)
 
 GoSolar is a SolarWinds client library written in Go. It allows you to submit
 queries to the SolarWinds Information Service (SWIS) and do various other
