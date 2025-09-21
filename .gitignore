@@ -26,3 +26,4 @@ _testmain.go
 # Gogland configuration files
 .idea/
 examples/bin/
+coverage.out

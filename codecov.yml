@@ -1,0 +1,30 @@
+# Codecov configuration for gosolar
+coverage:
+  status:
+    project:
+      default:
+        target: 80%
+        threshold: 1%
+        if_no_uploads: error
+        if_not_found: success
+        if_ci_failed: error
+    patch:
+      default:
+        target: 75%
+        threshold: 5%
+        if_no_uploads: error
+        if_not_found: success
+        if_ci_failed: error
+
+  ignore:
+    - "examples/"
+    - "*_test.go"
+    - "**/*_test.go"
+
+comment:
+  layout: "reach,diff,flags,tree,reach"
+  behavior: default
+  require_changes: false
+
+github_checks:
+  annotations: true
