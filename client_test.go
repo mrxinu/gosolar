@@ -103,7 +103,7 @@ func TestClient_QueryContext(t *testing.T) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
+		_ = json.NewEncoder(w).Encode(response)
 	}))
 	defer server.Close()
 
@@ -137,7 +137,7 @@ func TestClient_QueryContext(t *testing.T) {
 func TestClient_HTTPError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Authentication failed"))
+		_, _ = w.Write([]byte("Authentication failed"))
 	}))
 	defer server.Close()
 
@@ -176,7 +176,7 @@ func TestClient_ContextCancellation(t *testing.T) {
 	config.Username = "admin"
 	config.Password = "password"
 	config.Timeout = 10 * time.Second // Long client timeout
-	config.MaxRetries = 0 // Disable retries
+	config.MaxRetries = 0             // Disable retries
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
