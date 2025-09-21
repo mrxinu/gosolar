@@ -9,13 +9,13 @@ import (
 type ErrorType string
 
 const (
-	ErrorTypeNetwork       ErrorType = "network"
+	ErrorTypeNetwork        ErrorType = "network"
 	ErrorTypeAuthentication ErrorType = "authentication"
-	ErrorTypePermission    ErrorType = "permission"
-	ErrorTypeSWQL         ErrorType = "swql"
-	ErrorTypeNotFound     ErrorType = "not_found"
-	ErrorTypeValidation   ErrorType = "validation"
-	ErrorTypeInternal     ErrorType = "internal"
+	ErrorTypePermission     ErrorType = "permission"
+	ErrorTypeSWQL           ErrorType = "swql"
+	ErrorTypeNotFound       ErrorType = "not_found"
+	ErrorTypeValidation     ErrorType = "validation"
+	ErrorTypeInternal       ErrorType = "internal"
 )
 
 // Error represents a structured error from the SolarWinds API

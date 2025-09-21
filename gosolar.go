@@ -15,10 +15,10 @@ import (
 
 // Client represents a SolarWinds SWIS API client
 type Client struct {
-	config *Config
-	baseURL *url.URL
+	config     *Config
+	baseURL    *url.URL
 	httpClient *http.Client
-	logger *slog.Logger
+	logger     *slog.Logger
 }
 
 // NewClient creates a new SolarWinds client with the provided configuration
@@ -113,7 +113,7 @@ func (c *Client) doRequest(ctx context.Context, method, endpoint string, body in
 	if err != nil {
 		return nil, WrapError(lastErr, ErrorTypeNetwork, "request", "request failed after retries")
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	output, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -135,10 +135,6 @@ func (c *Client) post(endpoint string, body interface{}) ([]byte, error) {
 // PostContext performs a POST request with context
 func (c *Client) PostContext(ctx context.Context, endpoint string, body interface{}) ([]byte, error) {
 	return c.doRequest(ctx, "POST", endpoint, body)
-}
-
-func (c *Client) get(endpoint string) ([]byte, error) {
-	return c.GetContext(context.Background(), endpoint)
 }
 
 // GetContext performs a GET request with context

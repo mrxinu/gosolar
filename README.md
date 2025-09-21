@@ -1,6 +1,6 @@
 # gosolar
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/mrxinu/gosolar.svg)](https://pkg.go.dev/github.com/mrxinu/gosolar) [![Go Report Card](https://goreportcard.com/badge/github.com/mrxinu/gosolar)](https://goreportcard.com/report/github.com/mrxinu/gosolar) [![CI](https://github.com/mrxinu/gosolar/actions/workflows/ci.yml/badge.svg)](https://github.com/mrxinu/gosolar/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/mrxinu/gosolar/branch/master/graph/badge.svg)](https://codecov.io/gh/mrxinu/gosolar)
+[![Go Reference](https://pkg.go.dev/badge/github.com/mrxinu/gosolar.svg)](https://pkg.go.dev/github.com/mrxinu/gosolar) [![Go Report Card](https://goreportcard.com/badge/github.com/mrxinu/gosolar)](https://goreportcard.com/report/github.com/mrxinu/gosolar) [![CI](https://github.com/mrxinu/gosolar/actions/workflows/ci.yml/badge.svg)](https://github.com/mrxinu/gosolar/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/mrxinu/gosolar/branch/main/graph/badge.svg)](https://codecov.io/gh/mrxinu/gosolar)
 
 GoSolar is a modern, production-ready Go client library for SolarWinds Information Service (SWIS). It provides a comprehensive wrapper around SWIS REST calls with context support, structured error handling, and strong typing while maintaining full backward compatibility.
 

@@ -134,15 +134,15 @@ func (c *Client) CreateCustomPropertyContext(ctx context.Context, req CreateCust
 		req.Description,
 		string(req.Type),
 		fmt.Sprintf("%d", length),
-		"", // default value
-		"", // validation expression
-		"", // units
-		"", // format
-		"", // tooltip
-		"", // category
-		"", // subcategory
+		"",      // default value
+		"",      // validation expression
+		"",      // units
+		"",      // format
+		"",      // tooltip
+		"",      // category
+		"",      // subcategory
 		"false", // mandatory
-		"", // display name
+		"",      // display name
 	}
 
 	endpoint := fmt.Sprintf("Invoke/%s/CreateCustomProperty", req.Entity)
