@@ -1,57 +1,108 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
+	"strconv"
+	"time"
 
 	"github.com/mrxinu/gosolar"
 )
 
+// Node represents a SolarWinds network node with vendor information
+type Node struct {
+	Caption   string `json:"caption"`
+	IPAddress string `json:"ipaddress"`
+}
+
 func main() {
-	hostname := "localhost"
-	username := "admin"
-	password := ""
+	// Configuration from environment
+	hostname := getEnvOrDefault("SOLARWINDS_HOST", "localhost")
+	username := getEnvOrDefault("SOLARWINDS_USERNAME", "admin")
+	password := os.Getenv("SOLARWINDS_PASSWORD")
+	vendor := getEnvOrDefault("VENDOR_FILTER", "Cisco")
+	status := getEnvIntOrDefault("STATUS_FILTER", 1)
 
-	// NewClient creates a client that will handle the connection to SolarWinds
-	// along with the timeout and HTTP conversation.
-	client := gosolar.NewClient(hostname, username, password, true)
+	if password == "" {
+		log.Fatal("SOLARWINDS_PASSWORD environment variable is required")
+	}
 
-	// put the query into a string using a multi-line string assignment
+	// Create client with modern configuration
+	config := gosolar.DefaultConfig()
+	config.Host = hostname
+	config.Username = username
+	config.Password = password
+	config.InsecureSkipVerify = true // Only for demo
+	config.Timeout = 30 * time.Second
+
+	client, err := gosolar.NewClient(config)
+	if err != nil {
+		log.Fatalf("Failed to create client: %v", err)
+	}
+
+	// Parameterized SWQL query
 	query := `
 		SELECT
-			Caption
-			,IPAddress
+			Caption,
+			IPAddress
 		FROM Orion.Nodes
 		WHERE Vendor = @vendor
-		AND Status = @status
+		  AND Status = @status
+		ORDER BY Caption
 	`
 
-	// build a map that will hold the parameters for the query above
+	// Query parameters - safely passed to prevent injection
 	parameters := map[string]interface{}{
-		"vendor": "Cisco",
-		"status": 1,
+		"vendor": vendor,
+		"status": status,
 	}
 
-	// run the query without with the parameters map above
-	res, err := client.Query(query, parameters)
+	fmt.Printf("Searching for %s nodes with status %d...\n", vendor, status)
+
+	// Execute query with context and timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	res, err := client.QueryContext(ctx, query, parameters)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Query failed: %v", err)
 	}
 
-	// build a structure to unmarshal the results into
-	var nodes []struct {
-		Caption   string `json:"caption"`
-		IPAddress string `json:"ipaddress"`
-	}
-
-	// let unmarshal do the work of unpacking the JSON
+	// Unmarshal results
+	var nodes []Node
 	if err := json.Unmarshal(res, &nodes); err != nil {
-		log.Fatal(err)
+		log.Fatalf("Failed to unmarshal results: %v", err)
 	}
 
-	// iterate over the resulting slice of node structures
-	for _, n := range nodes {
-		fmt.Printf("Working with node [%s] on IP address [%s]...\n", n.Caption, n.IPAddress)
+	// Display results
+	if len(nodes) == 0 {
+		fmt.Printf("No %s nodes found with status %d\n", vendor, status)
+		return
 	}
+
+	fmt.Printf("Found %d matching nodes:\n", len(nodes))
+	for i, node := range nodes {
+		fmt.Printf("%d. %s (%s)\n", i+1, node.Caption, node.IPAddress)
+	}
+}
+
+// getEnvOrDefault returns environment variable or default value
+func getEnvOrDefault(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
+}
+
+// getEnvIntOrDefault returns environment variable as int or default value
+func getEnvIntOrDefault(key string, defaultValue int) int {
+	if value := os.Getenv(key); value != "" {
+		if intVal, err := strconv.Atoi(value); err == nil {
+			return intVal
+		}
+	}
+	return defaultValue
 }

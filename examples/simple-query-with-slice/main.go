@@ -1,58 +1,123 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/mrxinu/gosolar"
 )
 
+type Node struct {
+	Caption   string `json:"caption"`
+	IPAddress string `json:"ipaddress"`
+}
+
 func main() {
-	hostname := "localhost"
-	username := "admin"
-	password := ""
+	// Configuration from environment
+	hostname := getEnvOrDefault("SOLARWINDS_HOST", "localhost")
+	username := getEnvOrDefault("SOLARWINDS_USERNAME", "admin")
+	password := os.Getenv("SOLARWINDS_PASSWORD")
+	vendor := getEnvOrDefault("VENDOR_FILTER", "Cisco")
+	statusesStr := getEnvOrDefault("STATUS_FILTERS", "1,2,3")
 
-	// NewClient creates a client that will handle the connection to SolarWinds
-	// along with the timeout and HTTP conversation.
-	client := gosolar.NewClient(hostname, username, password, true)
+	if password == "" {
+		log.Fatal("SOLARWINDS_PASSWORD environment variable is required")
+	}
 
-	// put the query into a string using a multi-line string assignment
+	// Parse statuses from comma-separated string
+	statuses, err := parseIntSlice(statusesStr)
+	if err != nil {
+		log.Fatalf("Invalid STATUS_FILTERS format: %v", err)
+	}
+
+	// Create modern client
+	config := gosolar.DefaultConfig()
+	config.Host = hostname
+	config.Username = username
+	config.Password = password
+	config.InsecureSkipVerify = true // Only for demo
+	config.Timeout = 30 * time.Second
+
+	client, err := gosolar.NewClient(config)
+	if err != nil {
+		log.Fatalf("Failed to create client: %v", err)
+	}
+
+	// SWQL query with slice parameter
 	query := `
 		SELECT
-			Caption
-			,IPAddress
+			Caption,
+			IPAddress
 		FROM Orion.Nodes
 		WHERE Vendor = @vendor
-		AND Status IN @statuses
+		  AND Status IN @statuses
+		ORDER BY Caption
 	`
 
-	// build a map that will hold the parameters for the query above including
-	// a slice for the IN portion of the query
+	// Parameters including slice for IN clause
 	parameters := map[string]interface{}{
-		"vendor":   "Cisco",
-		"statuses": []int{1, 2, 3},
+		"vendor":   vendor,
+		"statuses": statuses,
 	}
 
-	// run the query without with the parameters map above
-	res, err := client.Query(query, parameters)
+	fmt.Printf("Searching for %s nodes with statuses %v...\n", vendor, statuses)
+
+	// Execute query with context
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	res, err := client.QueryContext(ctx, query, parameters)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Query failed: %v", err)
 	}
 
-	// build a structure to unmarshal the results into
-	var nodes []struct {
-		Caption   string `json:"caption"`
-		IPAddress string `json:"ipaddress"`
-	}
-
-	// let unmarshal do the work of unpacking the JSON
+	// Unmarshal results using strongly typed struct
+	var nodes []Node
 	if err := json.Unmarshal(res, &nodes); err != nil {
-		log.Fatal(err)
+		log.Fatalf("Failed to unmarshal results: %v", err)
 	}
 
-	// iterate over the resulting slice of node structures
-	for _, n := range nodes {
-		fmt.Printf("Working with node [%s] on IP address [%s]...\n", n.Caption, n.IPAddress)
+	// Display results
+	if len(nodes) == 0 {
+		fmt.Printf("No %s nodes found with statuses %v\n", vendor, statuses)
+		return
 	}
+
+	fmt.Printf("Found %d matching nodes:\n", len(nodes))
+	for i, node := range nodes {
+		fmt.Printf("%d. %s (%s)\n", i+1, node.Caption, node.IPAddress)
+	}
+}
+
+// Helper functions
+func getEnvOrDefault(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
+}
+
+func parseIntSlice(s string) ([]int, error) {
+	parts := strings.Split(s, ",")
+	result := make([]int, 0, len(parts))
+
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		val, err := strconv.Atoi(part)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, val)
+	}
+
+	return result, nil
 }
