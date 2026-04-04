@@ -1,11 +1,8 @@
 package gosolar
 
-import (
-	"fmt"
-	"net/http"
-)
+import "fmt"
 
-// ErrorType represents the category of error that occurred
+// ErrorType represents the category of error that occurred.
 type ErrorType string
 
 const (
@@ -18,7 +15,7 @@ const (
 	ErrorTypeInternal       ErrorType = "internal"
 )
 
-// Error represents a structured error from the SolarWinds API
+// Error represents a structured error from the SolarWinds API.
 type Error struct {
 	Type       ErrorType `json:"type"`
 	Operation  string    `json:"operation"`
@@ -28,7 +25,7 @@ type Error struct {
 	Cause      error     `json:"-"`
 }
 
-// Error implements the error interface
+// Error implements the error interface.
 func (e *Error) Error() string {
 	if e.StatusCode > 0 {
 		return fmt.Sprintf("gosolar %s error in %s (HTTP %d): %s", e.Type, e.Operation, e.StatusCode, e.Message)
@@ -36,12 +33,12 @@ func (e *Error) Error() string {
 	return fmt.Sprintf("gosolar %s error in %s: %s", e.Type, e.Operation, e.Message)
 }
 
-// Unwrap implements the errors.Unwrap interface
+// Unwrap implements the errors.Unwrap interface.
 func (e *Error) Unwrap() error {
 	return e.Cause
 }
 
-// Is implements the errors.Is interface for error type comparison
+// Is implements the errors.Is interface for error type comparison.
 func (e *Error) Is(target error) bool {
 	if t, ok := target.(*Error); ok {
 		return e.Type == t.Type
@@ -49,7 +46,7 @@ func (e *Error) Is(target error) bool {
 	return false
 }
 
-// NewError creates a new structured error
+// NewError creates a new structured error.
 func NewError(errType ErrorType, operation, message string) *Error {
 	return &Error{
 		Type:      errType,
@@ -58,20 +55,20 @@ func NewError(errType ErrorType, operation, message string) *Error {
 	}
 }
 
-// NewHTTPError creates a new error from an HTTP response
-func NewHTTPError(operation, endpoint string, resp *http.Response, message string) *Error {
+// NewHTTPError creates a new error from an HTTP status code.
+func NewHTTPError(operation, endpoint string, statusCode int, message string) *Error {
 	var errType ErrorType
-	switch resp.StatusCode {
-	case http.StatusUnauthorized:
+	switch statusCode {
+	case 401:
 		errType = ErrorTypeAuthentication
-	case http.StatusForbidden:
+	case 403:
 		errType = ErrorTypePermission
-	case http.StatusNotFound:
+	case 404:
 		errType = ErrorTypeNotFound
-	case http.StatusBadRequest:
+	case 400:
 		errType = ErrorTypeValidation
 	default:
-		if resp.StatusCode >= 500 {
+		if statusCode >= 500 {
 			errType = ErrorTypeInternal
 		} else {
 			errType = ErrorTypeNetwork
@@ -82,12 +79,12 @@ func NewHTTPError(operation, endpoint string, resp *http.Response, message strin
 		Type:       errType,
 		Operation:  operation,
 		Endpoint:   endpoint,
-		StatusCode: resp.StatusCode,
+		StatusCode: statusCode,
 		Message:    message,
 	}
 }
 
-// WrapError wraps an existing error with additional context
+// WrapError wraps an existing error with additional context.
 func WrapError(err error, errType ErrorType, operation, message string) *Error {
 	return &Error{
 		Type:      errType,

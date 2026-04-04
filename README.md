@@ -2,28 +2,17 @@
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/mrxinu/gosolar.svg)](https://pkg.go.dev/github.com/mrxinu/gosolar) [![Go Report Card](https://goreportcard.com/badge/github.com/mrxinu/gosolar)](https://goreportcard.com/report/github.com/mrxinu/gosolar) [![CI](https://github.com/mrxinu/gosolar/actions/workflows/ci.yml/badge.svg)](https://github.com/mrxinu/gosolar/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/mrxinu/gosolar/branch/main/graph/badge.svg)](https://codecov.io/gh/mrxinu/gosolar)
 
-GoSolar is a modern, production-ready Go client library for SolarWinds Information Service (SWIS). It provides a comprehensive wrapper around SWIS REST calls with context support, structured error handling, and strong typing while maintaining full backward compatibility.
+GoSolar is a Go client library for the SolarWinds Information Service (SWIS) REST API. It provides a production-ready wrapper around SWIS REST calls with context-first APIs, structured error handling, generics, and strong typing.
 
 ## Features
 
-### 🚀 **Modern Go Practices**
-- **Context Support** - All operations support cancellation and timeouts
+- **Context-First API** - All operations take `context.Context` as the first parameter
 - **Structured Errors** - Typed error system with proper error classification
-- **Configuration-Based** - Modern config pattern with validation and defaults
-- **Strong Typing** - Predefined structures for common SolarWinds entities
-- **Retry Logic** - Smart retry mechanism for network failures
-- **Go Modules** - Proper dependency management
-
-### 🔒 **Production Ready**
-- **Comprehensive Testing** - 100% test coverage with HTTP mocking
-- **Security Best Practices** - Environment-based configuration, credential validation
-- **Connection Management** - Optimized connection pooling and timeout handling
-- **Structured Logging** - Built-in logging with configurable levels
-
-### 🔄 **Backward Compatible**
-- **Zero Breaking Changes** - All existing code continues to work
-- **Legacy Methods** - Original API preserved with deprecation warnings
-- **Gradual Migration** - Optional adoption of new patterns
+- **Configuration-Based** - Config pattern with validation and sensible defaults
+- **Strong Typing** - Predefined structures for common SolarWinds entities with generics
+- **Exponential Backoff** - Retry logic with exponential backoff for transient failures
+- **Structured Logging** - Built-in `slog` integration
+- **Configurable Port** - Default port 17774 (current SWIS), configurable for legacy (17778)
 
 ## Installation
 
@@ -31,18 +20,16 @@ GoSolar is a modern, production-ready Go client library for SolarWinds Informati
 go get github.com/mrxinu/gosolar
 ```
 
-**Requirements**: Go 1.21+
+**Requirements**: Go 1.22+
 
 ## Quick Start
-
-### Modern Usage (Recommended)
 
 ```go
 package main
 
 import (
     "context"
-    "encoding/json"
+    "errors"
     "fmt"
     "log"
     "os"
@@ -52,39 +39,28 @@ import (
 )
 
 func main() {
-    // Configuration-based client creation
     config := gosolar.DefaultConfig()
     config.Host = "solarwinds.example.com"
     config.Username = "admin"
     config.Password = os.Getenv("SOLARWINDS_PASSWORD")
-    config.Timeout = 30 * time.Second
 
     client, err := gosolar.NewClient(config)
     if err != nil {
         log.Fatal(err)
     }
 
-    // Context-aware operations
     ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
     defer cancel()
 
-    // Execute query with context
-    result, err := client.QueryContext(ctx, "SELECT NodeID, Caption, IPAddress FROM Orion.Nodes", nil)
+    result, err := client.Query(ctx, "SELECT NodeID, Caption, IPAddress FROM Orion.Nodes", nil)
     if err != nil {
-        // Structured error handling
         var swErr *gosolar.Error
         if errors.As(err, &swErr) {
-            switch swErr.Type {
-            case gosolar.ErrorTypeAuthentication:
-                log.Fatal("Authentication failed")
-            case gosolar.ErrorTypeNetwork:
-                log.Fatal("Network error:", swErr.Message)
-            }
+            log.Fatalf("%s error: %s", swErr.Type, swErr.Message)
         }
         log.Fatal(err)
     }
 
-    // Strongly typed results
     queryResult, err := gosolar.UnmarshalQueryResult[gosolar.CommonNode](result)
     if err != nil {
         log.Fatal(err)
@@ -97,100 +73,61 @@ func main() {
 }
 ```
 
-### Legacy Usage (Backward Compatible)
-
-```go
-package main
-
-import (
-    "encoding/json"
-    "fmt"
-    "log"
-    "github.com/mrxinu/gosolar"
-)
-
-func main() {
-    // Original API still works
-    client, err := gosolar.NewClientLegacy("localhost", "admin", "password", true)
-    if err != nil {
-        log.Fatal(err)
-    }
-
-    res, err := client.Query("SELECT Caption, IPAddress FROM Orion.Nodes", nil)
-    if err != nil {
-        log.Fatal(err)
-    }
-
-    var nodes []struct {
-        Caption   string `json:"caption"`
-        IPAddress string `json:"ipaddress"`
-    }
-
-    if err := json.Unmarshal(res, &nodes); err != nil {
-        log.Fatal(err)
-    }
-
-    for _, n := range nodes {
-        fmt.Printf("Node: %s (%s)\n", n.Caption, n.IPAddress)
-    }
-}
-```
-
 ## Core Operations
 
 ### SWQL Queries
 ```go
 // Basic query
-result, err := client.QueryContext(ctx, "SELECT * FROM Orion.Nodes", nil)
+result, err := client.Query(ctx, "SELECT * FROM Orion.Nodes", nil)
 
 // Parameterized query
-params := map[string]interface{}{
+params := map[string]any{
     "vendor": "Cisco",
     "status": 1,
 }
-result, err := client.QueryContext(ctx, "SELECT * FROM Orion.Nodes WHERE Vendor = @vendor AND Status = @status", params)
+result, err := client.Query(ctx, "SELECT * FROM Orion.Nodes WHERE Vendor = @vendor AND Status = @status", params)
 
 // Query helpers
-value, err := client.QueryOneContext(ctx, "SELECT COUNT(*) FROM Orion.Nodes", nil)
-row, err := client.QueryRowContext(ctx, "SELECT * FROM Orion.Nodes WHERE NodeID = 1", nil)
-column, err := client.QueryColumnContext(ctx, "SELECT Caption FROM Orion.Nodes", nil)
+value, err := client.QueryOne(ctx, "SELECT COUNT(*) FROM Orion.Nodes", nil)
+row, err := client.QueryRow(ctx, "SELECT * FROM Orion.Nodes WHERE NodeID = 1", nil)
+column, err := client.QueryColumn(ctx, "SELECT Caption FROM Orion.Nodes", nil)
 ```
 
 ### CRUD Operations
 ```go
 // Read entity
-data, err := client.ReadContext(ctx, "swis://server/Orion/Orion.Nodes/NodeID=1")
+data, err := client.Read(ctx, "swis://server/Orion/Orion.Nodes/NodeID=1")
 
 // Create entity
-props := map[string]interface{}{
+props := map[string]any{
     "IPAddress": "192.168.1.1",
-    "Caption": "New Node",
+    "Caption":   "New Node",
 }
-result, err := client.CreateContext(ctx, "Orion.Nodes", props)
+result, err := client.Create(ctx, "Orion.Nodes", props)
 
 // Update entity
-updates := map[string]interface{}{"Caption": "Updated Node"}
-result, err := client.UpdateContext(ctx, "swis://server/Orion/Orion.Nodes/NodeID=1", updates)
+updates := map[string]any{"Caption": "Updated Node"}
+result, err := client.Update(ctx, "swis://server/Orion/Orion.Nodes/NodeID=1", updates)
 
 // Delete entity
-result, err := client.DeleteContext(ctx, "swis://server/Orion/Orion.Nodes/NodeID=1")
+result, err := client.Delete(ctx, "swis://server/Orion/Orion.Nodes/NodeID=1")
 ```
 
 ### Custom Properties
 ```go
 // Set single property
-err := client.SetCustomPropertyContext(ctx, nodeURI, "Site_Name", "Data Center 1")
+err := client.SetCustomProperty(ctx, nodeURI, "Site_Name", "Data Center 1")
 
 // Set multiple properties
-props := map[string]interface{}{
-    "Site_Name": "Data Center 1",
+props := map[string]any{
+    "Site_Name":   "Data Center 1",
     "Environment": "Production",
 }
-err := client.SetCustomPropertiesContext(ctx, nodeURI, props)
+err := client.SetCustomProperties(ctx, nodeURI, props)
 
 // Bulk set property on multiple entities
 uris := []string{nodeURI1, nodeURI2, nodeURI3}
-err := client.BulkSetCustomPropertyContext(ctx, uris, "Site_Name", "Data Center 1")
+err := client.BulkSetCustomProperty(ctx, uris, "Site_Name", "Data Center 1")
 
 // Create custom property definition
 req := gosolar.CreateCustomPropertyRequest{
@@ -200,32 +137,23 @@ req := gosolar.CreateCustomPropertyRequest{
     Type:        gosolar.CustomPropertyTypeString,
     Length:      100,
 }
-err := client.CreateCustomPropertyContext(ctx, req)
+err := client.CreateCustomProperty(ctx, req)
 ```
 
 ## Configuration
 
-### Environment Variables
-```bash
-export SOLARWINDS_HOST="your-server.com"
-export SOLARWINDS_USERNAME="admin"
-export SOLARWINDS_PASSWORD="your-password"
-```
-
-### Advanced Configuration
 ```go
 config := gosolar.DefaultConfig()
 config.Host = "solarwinds.example.com"
+config.Port = 17774              // Default; use 17778 for legacy installations
 config.Username = "admin"
 config.Password = os.Getenv("SOLARWINDS_PASSWORD")
 config.Timeout = 30 * time.Second
 config.MaxRetries = 3
-config.RetryDelay = time.Second
+config.RetryBaseDelay = time.Second
 config.MaxIdleConns = 10
 config.InsecureSkipVerify = false // Use proper certificates in production
 config.UserAgent = "MyApp/1.0"
-
-// Optional: Custom logger
 config.Logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
 client, err := gosolar.NewClient(config)
@@ -234,7 +162,7 @@ client, err := gosolar.NewClient(config)
 ## Error Handling
 
 ```go
-result, err := client.QueryContext(ctx, "SELECT * FROM Orion.Nodes", nil)
+result, err := client.Query(ctx, "SELECT * FROM Orion.Nodes", nil)
 if err != nil {
     var swErr *gosolar.Error
     if errors.As(err, &swErr) {
@@ -249,14 +177,7 @@ if err != nil {
             // Handle SWQL syntax errors
         case gosolar.ErrorTypeNotFound:
             // Handle not found errors
-        case gosolar.ErrorTypeValidation:
-            // Handle validation errors
-        case gosolar.ErrorTypeInternal:
-            // Handle internal server errors
         }
-
-        fmt.Printf("Error: %s (Type: %s, Status: %d)\n",
-            swErr.Message, swErr.Type, swErr.StatusCode)
     }
 }
 ```
@@ -272,65 +193,37 @@ var volumes []gosolar.Volume
 var applications []gosolar.Application
 
 // Status constants
-if node.Status == gosolar.NodeStatusUp {
-    fmt.Println("Node is up")
-}
-
-if alert.Severity == gosolar.AlertSeverityCritical {
-    fmt.Println("Critical alert")
-}
+if node.Status == gosolar.NodeStatusUp { ... }
+if alert.Severity == gosolar.AlertSeverityCritical { ... }
 ```
 
 ## Testing
 
-Run the comprehensive test suite:
-
 ```bash
-# Run all tests
-go test ./...
-
-# Run tests with coverage
-go test -cover ./...
-
-# Run specific test
-go test -run TestNewClient
+go test ./...                          # Run all tests
+go test -v -race -cover ./...          # Verbose with race detection and coverage
+go test -run TestNewClient             # Run specific test
 ```
-
-## Migration from v1
-
-See [MODERNIZATION.md](MODERNIZATION.md) for detailed migration instructions.
-
-### Quick Migration
-1. **No immediate changes required** - existing code continues to work
-2. **Gradual adoption** - use new patterns for new code
-3. **Update when convenient** - migrate existing code over time
-
-### Key Changes
-- Client creation: `NewClient(config)` vs `NewClientLegacy(host, user, pass, ssl)`
-- Context methods: `QueryContext(ctx, ...)` vs `Query(...)`
-- Error handling: Structured errors vs string errors
 
 ## Examples
 
-See the [examples](examples/) directory for working examples:
+See the [examples](examples/) directory:
 - [simple-query](examples/simple-query/) - Basic SWQL queries
 - [simple-query-with-parameters](examples/simple-query-with-parameters/) - Parameterized queries
 - [simple-query-with-slice](examples/simple-query-with-slice/) - Array parameters
 - [custom-property-update](examples/custom-property-update/) - Custom property management
 
-## Documentation
+## Migration from v2
 
-- **API Reference**: [godoc.org/github.com/mrxinu/gosolar](http://godoc.org/github.com/mrxinu/gosolar)
-- **Migration Guide**: [MODERNIZATION.md](MODERNIZATION.md)
-- **Development Guide**: [CLAUDE.md](CLAUDE.md)
+See [MODERNIZATION.md](MODERNIZATION.md) for the full migration guide.
 
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for new functionality
-4. Ensure all tests pass: `go test ./...`
-5. Submit a pull request
+Key changes in v3:
+- All methods now take `context.Context` as the first parameter (no more `*Context` suffix)
+- Removed `NewClientLegacy()` and non-context method wrappers
+- Default port changed from 17778 to 17774 (SolarWinds 2024.2+)
+- `RetryDelay` renamed to `RetryBaseDelay` (now uses exponential backoff)
+- `interface{}` replaced with `any` throughout
+- Uses `any` type alias (`interface{}` still works but `any` is idiomatic)
 
 ## License
 

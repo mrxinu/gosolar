@@ -22,6 +22,7 @@ func TestNewClient(t *testing.T) {
 			name: "valid config",
 			config: &Config{
 				Host:     "example.com",
+				Port:     DefaultPort,
 				Username: "admin",
 				Password: "password",
 				Timeout:  30 * time.Second,
@@ -31,6 +32,7 @@ func TestNewClient(t *testing.T) {
 		{
 			name: "missing host",
 			config: &Config{
+				Port:     DefaultPort,
 				Username: "admin",
 				Password: "password",
 				Timeout:  30 * time.Second,
@@ -41,6 +43,7 @@ func TestNewClient(t *testing.T) {
 			name: "missing username",
 			config: &Config{
 				Host:     "example.com",
+				Port:     DefaultPort,
 				Password: "password",
 				Timeout:  30 * time.Second,
 			},
@@ -50,9 +53,21 @@ func TestNewClient(t *testing.T) {
 			name: "invalid timeout",
 			config: &Config{
 				Host:     "example.com",
+				Port:     DefaultPort,
 				Username: "admin",
 				Password: "password",
 				Timeout:  -1 * time.Second,
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid port",
+			config: &Config{
+				Host:     "example.com",
+				Port:     0,
+				Username: "admin",
+				Password: "password",
+				Timeout:  30 * time.Second,
 			},
 			wantErr: true,
 		},
@@ -73,18 +88,7 @@ func TestNewClient(t *testing.T) {
 	}
 }
 
-func TestNewClientLegacy(t *testing.T) {
-	client, err := NewClientLegacy("example.com", "admin", "password", true)
-	require.NoError(t, err)
-	require.NotNil(t, client)
-
-	assert.Equal(t, "example.com", client.config.Host)
-	assert.Equal(t, "admin", client.config.Username)
-	assert.Equal(t, "password", client.config.Password)
-	assert.True(t, client.config.InsecureSkipVerify)
-}
-
-func TestClient_QueryContext(t *testing.T) {
+func TestClient_Query(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "POST", r.Method)
 		assert.Equal(t, "/SolarWinds/InformationService/v3/Json/Query", r.URL.Path)
@@ -95,8 +99,8 @@ func TestClient_QueryContext(t *testing.T) {
 		assert.Equal(t, "admin", username)
 		assert.Equal(t, "password", password)
 
-		response := map[string]interface{}{
-			"results": []map[string]interface{}{
+		response := map[string]any{
+			"results": []map[string]any{
 				{"NodeID": 1, "Caption": "Node1"},
 				{"NodeID": 2, "Caption": "Node2"},
 			},
@@ -121,12 +125,12 @@ func TestClient_QueryContext(t *testing.T) {
 	client.baseURL.Host = server.URL[7:]
 
 	ctx := context.Background()
-	result, err := client.QueryContext(ctx, "SELECT NodeID, Caption FROM Orion.Nodes", nil)
+	result, err := client.Query(ctx, "SELECT NodeID, Caption FROM Orion.Nodes", nil)
 
 	require.NoError(t, err)
 	assert.NotEmpty(t, result)
 
-	var nodes []map[string]interface{}
+	var nodes []map[string]any
 	err = json.Unmarshal(result, &nodes)
 	require.NoError(t, err)
 	assert.Len(t, nodes, 2)
@@ -146,7 +150,7 @@ func TestClient_HTTPError(t *testing.T) {
 	config.Username = "wrong"
 	config.Password = "credentials"
 	config.InsecureSkipVerify = true
-	config.MaxRetries = 0 // Disable retries for this test
+	config.MaxRetries = 0
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -155,7 +159,7 @@ func TestClient_HTTPError(t *testing.T) {
 	client.baseURL.Host = server.URL[7:]
 
 	ctx := context.Background()
-	_, err = client.QueryContext(ctx, "SELECT * FROM Orion.Nodes", nil)
+	_, err = client.Query(ctx, "SELECT * FROM Orion.Nodes", nil)
 
 	require.Error(t, err)
 	swErr, ok := err.(*Error)
@@ -166,7 +170,7 @@ func TestClient_HTTPError(t *testing.T) {
 
 func TestClient_ContextCancellation(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		time.Sleep(200 * time.Millisecond) // Longer than context timeout
+		time.Sleep(200 * time.Millisecond)
 		w.WriteHeader(http.StatusOK)
 	}))
 	defer server.Close()
@@ -175,8 +179,8 @@ func TestClient_ContextCancellation(t *testing.T) {
 	config.Host = server.URL[7:]
 	config.Username = "admin"
 	config.Password = "password"
-	config.Timeout = 10 * time.Second // Long client timeout
-	config.MaxRetries = 0             // Disable retries
+	config.Timeout = 10 * time.Second
+	config.MaxRetries = 0
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -184,37 +188,32 @@ func TestClient_ContextCancellation(t *testing.T) {
 	client.baseURL.Scheme = "http"
 	client.baseURL.Host = server.URL[7:]
 
-	// Use a short context timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
 	defer cancel()
 
-	_, err = client.QueryContext(ctx, "SELECT * FROM Orion.Nodes", nil)
+	_, err = client.Query(ctx, "SELECT * FROM Orion.Nodes", nil)
 
 	require.Error(t, err)
-	// Should be a context/network error
 	swErr, ok := err.(*Error)
 	require.True(t, ok)
 	assert.Equal(t, ErrorTypeNetwork, swErr.Type)
 }
 
 func TestClient_Retries(t *testing.T) {
-	// Test that retries work for network errors
-	// Use a non-existent host to trigger network errors
 	config := DefaultConfig()
 	config.Host = "nonexistent.invalid"
 	config.Username = "admin"
 	config.Password = "password"
 	config.MaxRetries = 2
-	config.RetryDelay = 10 * time.Millisecond
+	config.RetryBaseDelay = 10 * time.Millisecond
 	config.Timeout = 100 * time.Millisecond
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
 	ctx := context.Background()
-	_, err = client.QueryContext(ctx, "SELECT * FROM Orion.Nodes", nil)
+	_, err = client.Query(ctx, "SELECT * FROM Orion.Nodes", nil)
 
-	// Should fail with network error after retries
 	require.Error(t, err)
 	swErr, ok := err.(*Error)
 	require.True(t, ok)
@@ -228,9 +227,10 @@ func TestDefaultConfig(t *testing.T) {
 	assert.Equal(t, 30*time.Second, config.Timeout)
 	assert.Equal(t, 10, config.MaxIdleConns)
 	assert.Equal(t, 3, config.MaxRetries)
-	assert.Equal(t, time.Second, config.RetryDelay)
+	assert.Equal(t, time.Second, config.RetryBaseDelay)
+	assert.Equal(t, DefaultPort, config.Port)
 	assert.False(t, config.InsecureSkipVerify)
-	assert.Equal(t, "gosolar/2.0", config.UserAgent)
+	assert.Equal(t, "gosolar/3.0", config.UserAgent)
 }
 
 func TestConfig_Validate(t *testing.T) {
@@ -243,6 +243,7 @@ func TestConfig_Validate(t *testing.T) {
 			name: "valid config",
 			config: &Config{
 				Host:       "example.com",
+				Port:       DefaultPort,
 				Username:   "admin",
 				Password:   "password",
 				Timeout:    30 * time.Second,
@@ -254,12 +255,25 @@ func TestConfig_Validate(t *testing.T) {
 			name: "negative max retries",
 			config: &Config{
 				Host:       "example.com",
+				Port:       DefaultPort,
 				Username:   "admin",
 				Password:   "password",
 				Timeout:    30 * time.Second,
 				MaxRetries: -1,
 			},
 			wantErr: true,
+		},
+		{
+			name: "custom port",
+			config: &Config{
+				Host:       "example.com",
+				Port:       17778,
+				Username:   "admin",
+				Password:   "password",
+				Timeout:    30 * time.Second,
+				MaxRetries: 0,
+			},
+			wantErr: false,
 		},
 	}
 

@@ -13,13 +13,13 @@ import (
 	"github.com/mrxinu/gosolar"
 )
 
+// Node represents a SolarWinds network node.
 type Node struct {
 	Caption   string `json:"caption"`
 	IPAddress string `json:"ipaddress"`
 }
 
 func main() {
-	// Configuration from environment
 	hostname := getEnvOrDefault("SOLARWINDS_HOST", "localhost")
 	username := getEnvOrDefault("SOLARWINDS_USERNAME", "admin")
 	password := os.Getenv("SOLARWINDS_PASSWORD")
@@ -30,26 +30,22 @@ func main() {
 		log.Fatal("SOLARWINDS_PASSWORD environment variable is required")
 	}
 
-	// Parse statuses from comma-separated string
 	statuses, err := parseIntSlice(statusesStr)
 	if err != nil {
 		log.Fatalf("Invalid STATUS_FILTERS format: %v", err)
 	}
 
-	// Create modern client
 	config := gosolar.DefaultConfig()
 	config.Host = hostname
 	config.Username = username
 	config.Password = password
 	config.InsecureSkipVerify = true // Only for demo
-	config.Timeout = 30 * time.Second
 
 	client, err := gosolar.NewClient(config)
 	if err != nil {
 		log.Fatalf("Failed to create client: %v", err)
 	}
 
-	// SWQL query with slice parameter
 	query := `
 		SELECT
 			Caption,
@@ -60,30 +56,26 @@ func main() {
 		ORDER BY Caption
 	`
 
-	// Parameters including slice for IN clause
-	parameters := map[string]interface{}{
+	parameters := map[string]any{
 		"vendor":   vendor,
 		"statuses": statuses,
 	}
 
 	fmt.Printf("Searching for %s nodes with statuses %v...\n", vendor, statuses)
 
-	// Execute query with context
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
-	res, err := client.QueryContext(ctx, query, parameters)
+	res, err := client.Query(ctx, query, parameters)
 	if err != nil {
 		log.Fatalf("Query failed: %v", err)
 	}
 
-	// Unmarshal results using strongly typed struct
 	var nodes []Node
 	if err := json.Unmarshal(res, &nodes); err != nil {
 		log.Fatalf("Failed to unmarshal results: %v", err)
 	}
 
-	// Display results
 	if len(nodes) == 0 {
 		fmt.Printf("No %s nodes found with statuses %v\n", vendor, statuses)
 		return
@@ -95,7 +87,6 @@ func main() {
 	}
 }
 
-// Helper functions
 func getEnvOrDefault(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {
 		return value

@@ -2,166 +2,90 @@
 
 This document summarizes the modernization changes made to the GoSolar library.
 
-## What Was Modernized
+## v3 Changes (Current)
 
-### 1. Dependency Management
+### Context-First API
+All methods now take `context.Context` as the first parameter. The `*Context` suffix and legacy non-context wrappers have been removed.
+
+**Before (v2):**
+```go
+result, err := client.Query("SELECT * FROM Orion.Nodes", nil)
+// or
+result, err := client.QueryContext(ctx, "SELECT * FROM Orion.Nodes", nil)
+```
+
+**After (v3):**
+```go
+result, err := client.Query(ctx, "SELECT * FROM Orion.Nodes", nil)
+```
+
+### Port Update
+The default SWIS REST API port changed from 17778 to 17774, matching SolarWinds 2024.2+. The port is now configurable via `Config.Port` for legacy installations.
+
+```go
+config := gosolar.DefaultConfig()
+config.Port = 17778 // For pre-2024.2 SolarWinds installations
+```
+
+### Exponential Backoff
+Retry logic now uses exponential backoff instead of a fixed delay. `Config.RetryDelay` has been renamed to `Config.RetryBaseDelay`.
+
+### Removed Legacy Methods
+- `NewClientLegacy()` has been removed
+- Non-context method wrappers (`Query()`, `Read()`, etc. without context) have been removed
+- All methods now require `context.Context` as the first parameter
+
+### Go 1.22+ Required
+- Minimum Go version bumped from 1.21 to 1.22
+- Uses `range` over integers (Go 1.22 feature)
+- Uses `any` type alias throughout (replacing `interface{}`)
+
+### Consistent Structured Errors
+All modules now use the structured error system (`*Error` types). Previously, `custompollers.go` and `ncm.go` used plain `fmt.Errorf`.
+
+### NewHTTPError Simplified
+`NewHTTPError` now takes an `int` status code instead of `*http.Response`, avoiding unnecessary coupling.
+
+### Retry Body Reuse Fix
+The retry logic now properly recreates the request body for each attempt, fixing a bug where the body reader was consumed on the first attempt.
+
+### Bug Fixes
+- Fixed `getEnvIntOrDefault` in custom-property-update example (was using `time.ParseDuration` instead of `strconv.Atoi`)
+
+## v2 Changes (Previous)
+
+### Dependency Management
 - Added `go.mod` for proper module management
-- Set minimum Go version to 1.21
-- Added testing dependencies (testify)
+- Testing dependencies (testify)
 
-### 2. Structured Error Handling
-- **New file**: `errors.go` with typed error system
+### Structured Error Handling
+- `errors.go` with typed error system
 - Error types: Network, Authentication, Permission, SWQL, NotFound, Validation, Internal
 - Proper error wrapping and unwrapping support
 - HTTP status code mapping to error types
 
-### 3. Configuration Management
-- **New file**: `config.go` with comprehensive configuration
+### Configuration Management
+- `config.go` with comprehensive configuration
 - Configuration validation with sensible defaults
 - Timeout, retry, and connection pool settings
-- Environment variable support in examples
 
-### 4. Context Support
-- All client methods now have `Context` variants
-- Request cancellation and timeout support
-- Backward compatibility with legacy methods
-- Context-aware logging
-
-### 5. Modern Client Architecture
-- Configuration-based client creation
-- Built-in retry logic with exponential backoff
-- Structured logging with `slog`
-- Improved HTTP transport management
-- Request/response debugging
-
-### 6. Strong Typing
-- **New file**: `types.go` with common SolarWinds entities
-- Generic query result helpers
+### Strong Typing
+- `types.go` with common SolarWinds entities
+- Generic query result helpers (`UnmarshalQueryResult[T]`)
 - Constants for status values and alert severities
 - Type-safe custom property management
 
-### 7. Comprehensive Testing
-- **New files**: `client_test.go`, `errors_test.go`
+### Comprehensive Testing
+- `client_test.go`, `errors_test.go`
 - HTTP mocking for integration testing
-- Error condition testing
-- Context cancellation testing
-- Configuration validation testing
-- 100% test coverage for core functionality
+- Error condition, context cancellation, and configuration validation testing
 
-### 8. Modernized Examples
-- Environment-based configuration
-- Context usage with timeouts
-- Proper error handling
-- Input validation
-- Security best practices (no hardcoded credentials)
+## Migration Guide (v2 to v3)
 
-### 9. Enhanced Custom Properties
-- Strongly typed custom property creation
-- Validation for property requests
-- Type-safe property value handling
-- Better error messages
-
-## Breaking Changes
-
-### Client Creation
-**Before:**
-```go
-client := gosolar.NewClient(hostname, username, password, ignoreSSL)
-```
-
-**After:**
-```go
-config := gosolar.DefaultConfig()
-config.Host = hostname
-config.Username = username
-config.Password = password
-config.InsecureSkipVerify = ignoreSSL
-
-client, err := gosolar.NewClient(config)
-```
-
-**Migration:** Use `NewClientLegacy()` for backward compatibility.
-
-### Context Methods
-**Before:**
-```go
-result, err := client.Query("SELECT * FROM Orion.Nodes", nil)
-```
-
-**After (recommended):**
-```go
-ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-defer cancel()
-
-result, err := client.QueryContext(ctx, "SELECT * FROM Orion.Nodes", nil)
-```
-
-**Migration:** Legacy methods still work but delegate to context versions.
-
-## New Features
-
-### Retry Logic
-- Automatic retries for network failures
-- Configurable retry count and delay
-- Smart error classification
-
-### Structured Logging
-- Debug logging for all requests
-- Configurable logger injection
-- Request/response tracing
-
-### Strong Typing
-- Pre-defined structures for common entities
-- Generic unmarshaling helpers
-- Type-safe constants
-
-### Enhanced Error Handling
-- Detailed error context
-- Error type classification
-- Proper error chaining
-
-## Backward Compatibility
-
-- Legacy constructor `NewClientLegacy()` preserves old behavior
-- All existing method signatures preserved
-- Non-context methods delegate to context versions
-- Examples updated but old patterns still work
-
-## Performance Improvements
-
-- Connection pooling optimization
-- Request timeout management
-- Efficient retry logic
-- Reduced memory allocations
-
-## Security Enhancements
-
-- Environment variable configuration
-- No hardcoded credentials in examples
-- Proper credential validation
-- Secure default configurations
-
-## Development Experience
-
-- Comprehensive test suite
-- Better error messages
-- IDE-friendly interfaces
-- Extensive documentation
-- Modern Go tooling support
-
-## Migration Guide
-
-1. **Update imports**: No changes needed
-2. **Client creation**: Use new configuration pattern or `NewClientLegacy()`
-3. **Add context**: Use `*Context` methods for new code
-4. **Error handling**: Check for typed errors using `errors.As()`
-5. **Configuration**: Use environment variables in production
-6. **Testing**: Run `go test ./...` to verify compatibility
-
-## Future Considerations
-
-- HTTP/2 support
-- Metrics and tracing integration
-- Connection pooling per endpoint
-- Advanced retry strategies
-- Configuration file support
+1. **Add context to all calls**: Every client method now requires `context.Context` as the first parameter
+2. **Remove `Context` suffix**: `QueryContext` becomes `Query`, `ReadContext` becomes `Read`, etc.
+3. **Replace `NewClientLegacy`**: Use `NewClient` with a `Config` struct
+4. **Update retry config**: Rename `RetryDelay` to `RetryBaseDelay`
+5. **Check port**: Default port is now 17774. Set `config.Port = 17778` for older SolarWinds
+6. **Replace `interface{}`**: Use `any` (optional, both work)
+7. **Update Go version**: Requires Go 1.22+

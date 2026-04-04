@@ -3,7 +3,6 @@ package gosolar
 import (
 	"errors"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -113,11 +112,7 @@ func TestNewHTTPError(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			recorder := httptest.NewRecorder()
-			recorder.WriteHeader(tt.statusCode)
-			resp := recorder.Result()
-
-			err := NewHTTPError("test_operation", "/test/endpoint", resp, "test message")
+			err := NewHTTPError("test_operation", "/test/endpoint", tt.statusCode, "test message")
 
 			assert.Equal(t, tt.expectedType, err.Type)
 			assert.Equal(t, "test_operation", err.Operation)

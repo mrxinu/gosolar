@@ -4,13 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-GoSolar is a modernized Go client library for SolarWinds Information Service (SWIS) REST API. It provides a comprehensive, production-ready wrapper around SWIS REST calls with modern Go practices including context support, structured error handling, and strong typing.
+GoSolar is a Go client library for the SolarWinds Information Service (SWIS) REST API. It provides a production-ready wrapper around SWIS REST calls with modern Go practices including context-first APIs, structured error handling, generics, and strong typing.
 
 ## Architecture
 
 The codebase follows modern Go patterns with the following structure:
 
-- `gosolar.go` - Core client with context support, retries, and structured errors
+- `gosolar.go` - Core client with context-first API, retries with exponential backoff, and structured errors
 - `config.go` - Configuration management with validation and defaults
 - `errors.go` - Structured error types with proper error handling
 - `types.go` - Strongly typed structures for common SolarWinds entities
@@ -18,33 +18,37 @@ The codebase follows modern Go patterns with the following structure:
 - `custompollers.go` - Universal Device Poller (UnDP) operations
 - `ncm.go` - Network Configuration Manager (NCM) operations
 - `*_test.go` - Comprehensive unit tests with mocking
-- `examples/` - Modernized examples with environment configuration
+- `examples/` - Examples with environment configuration
 
 ### Core Client Structure
 
 The `Client` uses modern configuration patterns:
 - Configuration-based initialization with `Config` struct
-- Context support for all operations (cancellation, timeouts)
+- Context as first parameter on all methods (no legacy wrappers)
 - Structured error handling with typed errors
 - Built-in retry logic with exponential backoff
 - Structured logging with `slog`
+- Configurable port (default: 17774, the current SWIS REST API port)
 - Connection pooling and timeout management
 
 ### Key Methods
 
-**All methods have both legacy and context-aware versions:**
+**All methods take `context.Context` as the first parameter:**
 
 **Core Operations:**
-- `QueryContext(ctx, swql, params)` - Execute SWQL with context
-- `QueryOneContext/QueryRowContext/QueryColumnContext` - Typed query helpers
-- `ReadContext(ctx, uri)` - Read entities with context
-- `CreateContext(ctx, entityType, properties)` - Create with context
-- `DeleteContext(ctx, uri)` - Delete with context
-- `InvokeContext(ctx, entity, verb, args)` - Execute verbs with context
+- `Query(ctx, swql, params)` - Execute SWQL query
+- `QueryOne/QueryRow/QueryColumn` - Typed query helpers
+- `Read(ctx, uri)` - Read entities
+- `Create(ctx, entityType, properties)` - Create entities
+- `Update(ctx, uri, body)` - Update entities
+- `Delete(ctx, uri)` - Delete entities
+- `Invoke(ctx, entity, verb, args)` - Execute verbs
 
 **Specialized Operations:**
-- Custom Properties: `SetCustomPropertyContext`, `BulkSetCustomPropertyContext`, `CreateCustomPropertyContext`
-- Bulk operations: `BulkDeleteContext`
+- Custom Properties: `SetCustomProperty`, `BulkSetCustomProperty`, `CreateCustomProperty`
+- Custom Pollers: `GetAssignments`, `AddNodePoller`, `AddInterfacePoller`
+- NCM: `RemoveNCMNodes`
+- Bulk operations: `BulkDelete`
 - Strongly typed helpers: `UnmarshalQueryResult[T]()`
 
 ## Development Commands
@@ -56,8 +60,8 @@ go mod download
 # Run tests
 go test ./...
 
-# Run tests with coverage
-go test -cover ./...
+# Run tests with coverage and race detection
+go test -v -race -cover ./...
 
 # Run specific test
 go test -run TestNewClient
@@ -84,10 +88,11 @@ Comprehensive test suite with:
 - Error condition testing
 - Context cancellation testing
 - Configuration validation testing
+- Port configuration testing
 
 Run tests: `go test ./...`
 
-## Modern Usage Patterns
+## Usage Patterns
 
 ### Basic Client Creation
 ```go
@@ -95,7 +100,6 @@ config := gosolar.DefaultConfig()
 config.Host = "solarwinds.example.com"
 config.Username = "admin"
 config.Password = os.Getenv("SOLARWINDS_PASSWORD")
-config.Timeout = 30 * time.Second
 
 client, err := gosolar.NewClient(config)
 if err != nil {
@@ -103,17 +107,17 @@ if err != nil {
 }
 ```
 
-### Context-Aware Operations
+### Query with Context
 ```go
 ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 defer cancel()
 
-result, err := client.QueryContext(ctx, "SELECT * FROM Orion.Nodes", nil)
+result, err := client.Query(ctx, "SELECT * FROM Orion.Nodes", nil)
 ```
 
 ### Strongly Typed Results
 ```go
-result, err := client.QueryContext(ctx, "SELECT NodeID, Caption FROM Orion.Nodes", nil)
+result, err := client.Query(ctx, "SELECT NodeID, Caption FROM Orion.Nodes", nil)
 if err != nil {
     return err
 }
@@ -143,6 +147,12 @@ if err != nil {
 }
 ```
 
+### Custom Port (legacy SolarWinds installations)
+```go
+config := gosolar.DefaultConfig()
+config.Port = 17778 // Legacy port, default is 17774
+```
+
 ## Environment Variables
 
 Examples support environment-based configuration:
@@ -151,11 +161,3 @@ Examples support environment-based configuration:
 - `SOLARWINDS_PASSWORD` - Authentication password (required)
 - `VENDOR_FILTER` - Vendor filter for parameterized queries
 - `STATUS_FILTER` - Status filter for parameterized queries
-
-## Backward Compatibility
-
-Legacy methods are preserved with deprecation warnings:
-- `NewClientLegacy()` - Original constructor
-- Non-context methods delegate to context versions
-
-New code should use the modern patterns with configuration and context support.

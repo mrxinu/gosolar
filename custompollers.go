@@ -1,11 +1,11 @@
 package gosolar
 
 import (
+	"context"
 	"encoding/json"
-	"fmt"
 )
 
-// Assignment holds all the current UnDP configuration from SolarWinds.
+// Assignment holds a Universal Device Poller (UnDP) assignment from SolarWinds.
 type Assignment struct {
 	ID             string `json:"CustomPollerAssignmentID"`
 	PollerID       string `json:"PollerID"`
@@ -15,37 +15,34 @@ type Assignment struct {
 	InstanceType   string `json:"InstanceType"`
 }
 
-// GetAssignments function returns all the current custom poller assignments
-// in effect at the time.
-func (c *Client) GetAssignments() ([]Assignment, error) {
+// GetAssignments returns all current custom poller assignments.
+func (c *Client) GetAssignments(ctx context.Context) ([]Assignment, error) {
 	query := `
 		SELECT
-			CustomPollerAssignmentID
-			,CustomPollerID
-			,NodeID
-			,InterfaceID
-			,CustomPollerID
-			,InstanceType
+			CustomPollerAssignmentID,
+			CustomPollerID,
+			NodeID,
+			InterfaceID,
+			CustomPollerID,
+			InstanceType
 		FROM Orion.NPM.CustomPollerAssignment
 	`
 
-	res, err := c.Query(query, nil)
+	res, err := c.Query(ctx, query, nil)
 	if err != nil {
-		return []Assignment{}, fmt.Errorf("failed to query for assignments: %v", err)
+		return nil, WrapError(err, ErrorTypeInternal, "get_assignments", "failed to query for assignments")
 	}
 
 	var assignments []Assignment
 	if err := json.Unmarshal(res, &assignments); err != nil {
-		return []Assignment{}, fmt.Errorf("failed to unmarshal assignments: %v", err)
+		return nil, WrapError(err, ErrorTypeInternal, "get_assignments", "failed to unmarshal assignments")
 	}
 
 	return assignments, nil
 }
 
 // AddNodePoller adds a Universal Device Poller (UnDP) to a node.
-func (c *Client) AddNodePoller(customPollerID string, nodeID int) error {
-	entity := "Orion.NPM.CustomPollerAssignmentOnNode"
-
+func (c *Client) AddNodePoller(ctx context.Context, customPollerID string, nodeID int) error {
 	request := struct {
 		NodeID         int    `json:"NodeID"`
 		CustomPollerID string `json:"CustomPollerID"`
@@ -54,18 +51,16 @@ func (c *Client) AddNodePoller(customPollerID string, nodeID int) error {
 		CustomPollerID: customPollerID,
 	}
 
-	_, err := c.post("Create/"+entity, request)
+	_, err := c.Create(ctx, "Orion.NPM.CustomPollerAssignmentOnNode", request)
 	if err != nil {
-		return fmt.Errorf("failed to add poller: %v", err)
+		return WrapError(err, ErrorTypeInternal, "add_node_poller", "failed to add poller")
 	}
 
 	return nil
 }
 
 // AddInterfacePoller adds a Universal Device Poller (UnDP) to an interface.
-func (c *Client) AddInterfacePoller(customPollerID string, interfaceID int) error {
-	entity := "Orion.NPM.CustomPollerAssignmentOnInterface"
-
+func (c *Client) AddInterfacePoller(ctx context.Context, customPollerID string, interfaceID int) error {
 	request := struct {
 		InterfaceID    int    `json:"InterfaceID"`
 		CustomPollerID string `json:"CustomPollerID"`
@@ -74,9 +69,9 @@ func (c *Client) AddInterfacePoller(customPollerID string, interfaceID int) erro
 		CustomPollerID: customPollerID,
 	}
 
-	_, err := c.post("Create/"+entity, request)
+	_, err := c.Create(ctx, "Orion.NPM.CustomPollerAssignmentOnInterface", request)
 	if err != nil {
-		return fmt.Errorf("failed to add poller: %v", err)
+		return WrapError(err, ErrorTypeInternal, "add_interface_poller", "failed to add poller")
 	}
 
 	return nil

@@ -41,7 +41,7 @@ type Interface struct {
 // CustomProperty represents a SolarWinds custom property
 type CustomProperty struct {
 	Name        string      `json:"name"`
-	Value       interface{} `json:"value"`
+	Value any `json:"value"`
 	Type        string      `json:"type"`
 	Description string      `json:"description"`
 }
